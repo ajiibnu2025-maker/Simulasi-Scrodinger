@@ -82,8 +82,8 @@ function initWave() {
         let xi = -10 + i * dx;
         x[i] = xi;
 
-        let real = Math.exp(-(xi-x0)**2/(2*sigma**2)) * Math.cos(k0*xi);
-        let imag = Math.exp(-(xi-x0)**2/(2*sigma**2)) * Math.sin(k0*xi);
+        let real = Math.exp(-((xi-x0)**2)/(2*sigma**2)) * Math.cos(k0*xi);
+        let imag = Math.exp(-((xi-x0)**2)/(2*sigma**2)) * Math.sin(k0*xi);
 
         psi[i] = {re: real, im: imag};
     }
@@ -187,7 +187,6 @@ const chart = new Chart(ctx, {
 });
 
 animate();
-
 V0Slider.oninput = updatePotential;
 
 </script>
