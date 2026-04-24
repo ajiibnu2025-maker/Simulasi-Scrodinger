@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Simulasi Schrödinger 1D - Potensial Tangga</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+    font-family: Arial;
+    text-align: center;
+    background: #0f172a;
+    color: white;
+}
+
+.container {
+    width: 90%;
+    margin: auto;
+}
+
+.controls {
+    margin: 20px;
+}
+
+input {
+    width: 200px;
+}
+
+canvas {
+    background: white;
+    border-radius: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>Simulasi Schrödinger 1D (Potensial Tangga)</h2>
+
+<canvas id="chart"></canvas>
+
+<div class="controls">
+    <p>Speed: <span id="speedVal">1</span></p>
+    <input type="range" id="speed" min="0.1" max="5" step="0.1" value="1">
+
+    <p>Potensial V₀: <span id="V0Val">1.5</span></p>
+    <input type="range" id="V0" min="0" max="5" step="0.1" value="1.5">
+
+    <p>Momentum k₀: <span id="k0Val">2.5</span></p>
+    <input type="range" id="k0" min="0.5" max="5" step="0.1" value="2.5">
+
+    <br><br>
+    <button onclick="resetWave()">Reset Gelombang</button>
+</div>
+</div>
+
+<script>
+
+const N = 500;
+const dx = 0.04;
+let x = [];
+let psi = [];
+let V = [];
+
+let hbar = 1;
+let m = 1;
+
+let speedSlider = document.getElementById("speed");
+let V0Slider = document.getElementById("V0");
+let k0Slider = document.getElementById("k0");
+
+function initWave() {
+    let x0 = -5;
+    let sigma = 0.7;
+    let k0 = parseFloat(k0Slider.value);
+
+    psi = [];
+
+    for (let i = 0; i < N; i++) {
+        let xi = -10 + i * dx;
+        x[i] = xi;
+
+        let real = Math.exp(-(xi-x0)**2/(2*sigma**2)) * Math.cos(k0*xi);
+        let imag = Math.exp(-(xi-x0)**2/(2*sigma**2)) * Math.sin(k0*xi);
+
+        psi[i] = {re: real, im: imag};
+    }
+}
+
+function updatePotential() {
+    let V0 = parseFloat(V0Slider.value);
+
+    for (let i = 0; i < N; i++) {
+        V[i] = x[i] >= 0 ? V0 : 0;
+    }
+}
+
+function laplacian(i) {
+    let left = psi[(i-1+N)%N];
+    let right = psi[(i+1)%N];
+    let center = psi[i];
+
+    return {
+        re: (left.re - 2*center.re + right.re) / (dx*dx),
+        im: (left.im - 2*center.im + right.im) / (dx*dx)
+    };
+}
+
+function step() {
+    let dt = 0.0008 * parseFloat(speedSlider.value);
+
+    let newPsi = [];
+
+    for (let i = 0; i < N; i++) {
+        let lap = laplacian(i);
+
+        let re = psi[i].re;
+        let im = psi[i].im;
+        let Vi = V[i];
+
+        newPsi[i] = {
+            re: re + dt * ( -Vi*im + (1/(2*m)) * lap.im ),
+            im: im + dt * (  Vi*re - (1/(2*m)) * lap.re )
+        };
+    }
+
+    psi = newPsi;
+}
+
+function getProb() {
+    return psi.map(p => p.re*p.re + p.im*p.im);
+}
+
+const ctx = document.getElementById("chart").getContext("2d");
+
+const chart = new Chart(ctx, {
+    type: "line",
+    data: {
+        labels: x,
+        datasets: [
+            {
+                label: "|ψ|²",
+                data: [],
+                borderWidth: 2,
+                tension: 0.2
+            },
+            {
+                label: "Potensial",
+                data: [],
+                borderDash: [5,5]
+            }
+        ]
+    },
+    options: {
+        animation: false,
+        scales: {
+            x: { display: false },
+            y: { min: 0, max: 1.5 }
+        }
+    }
+});
+
+function updateChart() {
+    chart.data.datasets[0].data = getProb();
+    chart.data.datasets[1].data = V.map(v => v*0.5);
+    chart.update();
+}
+
+function animate() {
+    step();
+    updateChart();
+
+    document.getElementById("speedVal").innerText = speedSlider.value;
+    document.getElementById("V0Val").innerText = V0Slider.value;
+    document.getElementById("k0Val").innerText = k0Slider.value;
+
+    requestAnimationFrame(animate);
+}
+
+function resetWave() {
+    initWave();
+}
+
+initWave();
+updatePotential();
+animate();
+
+V0Slider.oninput = updatePotential;
+
+</script>
+
+</body>
+</html>
