@@ -133,35 +133,6 @@ function getProb() {
     return psi.map(p => p.re*p.re + p.im*p.im);
 }
 
-const ctx = document.getElementById("chart").getContext("2d");
-
-const chart = new Chart(ctx, {
-    type: "line",
-    data: {
-        labels: x,
-        datasets: [
-            {
-                label: "|ψ|²",
-                data: [],
-                borderWidth: 2,
-                tension: 0.2
-            },
-            {
-                label: "Potensial",
-                data: [],
-                borderDash: [5,5]
-            }
-        ]
-    },
-    options: {
-        animation: false,
-        scales: {
-            x: { display: false },
-            y: { min: 0, max: 1.5 }
-        }
-    }
-});
-
 function updateChart() {
     chart.data.datasets[0].data = getProb();
     chart.data.datasets[1].data = V.map(v => v*0.5);
@@ -214,6 +185,7 @@ const chart = new Chart(ctx, {
         }
     }
 });
+
 animate();
 
 V0Slider.oninput = updatePotential;
